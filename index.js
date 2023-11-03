@@ -1,5 +1,5 @@
 let dataList = []
-let tmpDataList = []
+// let tmpDataList = []
 
 // 1. 그래프
 const barChart = document.querySelector('.graph-bar-chart')
@@ -15,6 +15,26 @@ const addButton = document.querySelector('.add-button')
 const editTextbox = document.querySelector('.edit-textbox')
 const editButton = document.querySelector('.edit-button')
 
+const sortButton = document.getElementById('sort-button')
+
+let sortDirection = true
+sortButton.addEventListener('click', () => {
+  if (sortDirection) {    
+    dataList.sort((a, b) => {
+      return a.value - b.value
+    }) 
+  } else {
+    dataList.sort((a, b) => {
+      return b.value - a.value
+    })
+  }
+  console.log(dataList)
+  sortDirection = !sortDirection
+
+  renderAdvancedEdit()
+  renderTable()
+  renderChart()
+})
 
 // 값 추가 로직
 addButton.addEventListener('click', function () {
@@ -60,8 +80,8 @@ function renderTable() {
   dataTableBody.innerHTML = ''
   sortDataList()
   
-  tmpDataList = JSON.parse(JSON.stringify(dataList))
-  tmpDataList.forEach((item, i) => {
+  dataList = JSON.parse(JSON.stringify(dataList))
+  dataList.forEach((item, i) => {
     const newRow = document.createElement('tr')
     newRow.classList.add('data-row')
     newRow.innerHTML = `
@@ -98,9 +118,28 @@ function renderTable() {
 
     editInput.addEventListener('blur', function () {
       valueDiv.textContent = editInput.value
-      item.value = editInput.value
-      valueDiv.classList.remove('hidden')
-      editInput.classList.add('hidden')
+
+      // const originValue = 0
+      const originValue = item.value
+      console.log(originValue)
+      if (!editInput.value) {
+        alert('value를 입력해주세요')
+        editInput.value = originValue
+        editInput.focus()
+        return
+      } else if (!/^\d+$/.test(editInput.value) || editInput.value < 0 || editInput.value > 100) {
+        alert('Value는 0과 100 사이의 정수만 입력해주세요.')        
+        editInput.value = originValue
+        editInput.focus()
+        return
+      } else {
+        valueDiv.classList.remove('hidden')
+        editInput.classList.add('hidden')
+        item.value = editInput.value
+        renderAdvancedEdit()
+        renderTable()
+        renderChart()
+      }
     })
 
     dataTableBody.appendChild(newRow)
@@ -117,7 +156,7 @@ applyButton.addEventListener('click', function() {
   const applyConfirm = confirm('Data를 수정하시겠습니까?')
 
   if (applyConfirm) {
-    for (const item of tmpDataList) {
+    for (const item of dataList) {
       if (!item.value) {
         alert('Value를 입력해주세요.')
         return
@@ -129,7 +168,7 @@ applyButton.addEventListener('click', function() {
       }
     }
 
-    tmpDataList = JSON.parse(JSON.stringify(dataList))
+    dataList = JSON.parse(JSON.stringify(dataList))
     renderAdvancedEdit()
     renderTable()
     renderChart()
